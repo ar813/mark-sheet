@@ -1,61 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Mark Sheet Application</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.container {
-  text-align: center;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-h1 {
-  color: #333;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 18px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Sheet</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Welcome to Mark Sheet Application</h1>
-    <button id="startButton">Start</button>
-  </div>
+    <form id="studentInfoForm">
+        <label for="studentName">Student Name:</label>
+        <input type="text" id="studentName" required>
+        
+        <label for="fatherName">Father Name:</label>
+        <input type="text" id="fatherName" required>
+        
+        <label for="rollNumber">Roll Number:</label>
+        <input type="text" id="rollNumber" required>
 
-  <script>
-    document.getElementById('startButton').addEventListener('click', function() {
-  // Redirect or load next page here (e.g., navigate to information form)
-  window.location.href = 'user-info.html';
-});
+        <table id="marksTable">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Total Marks</th>
+                    <th>Passing Marks</th>
+                </tr>
+            </thead>
+            <tbody id="subjectsContainer"></tbody>
+        </table>
 
-  </script>
+        <button type="button" onclick="generatePDF()">Generate PDF</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        window.onload = function() {
+            const subjects = JSON.parse(localStorage.getItem('subjects'));
+            const totalMarks = localStorage.getItem('totalMarks');
+            const passingMarks = localStorage.getItem('passingMarks');
+            const subjectsContainer = document.getElementById('subjectsContainer');
+            
+            subjects.forEach((subject) => {
+                const row = document.createElement('tr');
+                
+                const subjectCell = document.createElement('td');
+                subjectCell.innerText = subject;
+                row.appendChild(subjectCell);
+                
+                const marksCell = document.createElement('td');
+                const marksInput = document.createElement('input');
+                marksInput.type = 'number';
+                marksInput.className = 'subjectMarks';
+                marksInput.dataset.subject = subject;
+                
+                marksCell.appendChild(marksInput);
+                row.appendChild(marksCell);
+                
+                const totalMarksCell = document.createElement('td');
+                totalMarksCell.innerText = totalMarks;
+                row.appendChild(totalMarksCell);
+                
+                const passingMarksCell = document.createElement('td');
+                passingMarksCell.innerText = passingMarks;
+                row.appendChild(passingMarksCell);
+                
+                subjectsContainer.appendChild(row);
+            });
+        };
+
+        function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const schoolName = localStorage.getItem('schoolName');
+    const className = localStorage.getItem('className');
+    const studentName = document.getElementById('studentName').value;
+    const fatherName = document.getElementById('fatherName').value;
+    const rollNumber = document.getElementById('rollNumber').value;
+    const subjects = JSON.parse(localStorage.getItem('subjects'));
+    const totalMarks = parseFloat(localStorage.getItem('totalMarks'));
+    const passingMarks = parseFloat(localStorage.getItem('passingMarks'));
+
+    const margin = 10;
+    const pageWidth = doc.internal.pageSize.width;
+    const rowHeight = 8; // Adjust row height to fit more rows
+    const headerHeight = 10;
+    let yPosition = margin;
+
+    yPosition += 5;
+
+    // School Name
+    doc.setFontSize(18);
+    doc.setFont('Algerian', 'bold');
+    const schoolNameWidth = doc.getTextWidth(schoolName);
+    const schoolNameX = (pageWidth - schoolNameWidth) / 2;
+    doc.text(schoolName, schoolNameX, yPosition);
+    yPosition += 15;
+
+    // Student Info
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Student Name: ${studentName}`, margin, yPosition);
+    yPosition += 7;
+    doc.text(`Father Name: ${fatherName}`, margin, yPosition);
+    yPosition += 7;
+    doc.text(`Roll Number: ${rollNumber}`, margin, yPosition);
+    yPosition += 7;
+    doc.text(`Class: ${className}`, margin, yPosition);
+    yPosition += 7;
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPosition);
+    yPosition += 15;
+
+    // Table Header
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setFillColor(200, 220, 255); // Light blue background for header
+    doc.setTextColor(0); // Text color black
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, headerHeight, 'F'); // Draw header background
+    doc.text('Subject', margin + 2, yPosition + 5);
+    doc.text('Marks', margin + 30, yPosition + 5);
+    doc.text('Total', margin + 50, yPosition + 5);
+    doc.text('Passing', margin + 70, yPosition + 5);
+    doc.text('Percent', margin + 90, yPosition + 5);
+    doc.text('Grade', margin + 110, yPosition + 5);
+    doc.text('Remarks', margin + 130, yPosition + 5);
+    doc.text('Status', margin + 160, yPosition + 5); // Adjusted position for Status
+    yPosition += headerHeight;
+
+    // Table Content
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0); // Set text color to black
+    const tableWidth = pageWidth - 2 * margin;
+    const columnWidths = [28, 20, 20, 20, 20, 20, 30, 30]; // Adjusted column widths
+
+    subjects.forEach((subject, index) => {
+        const marks = parseFloat(document.querySelector(`.subjectMarks[data-subject="${subject}"]`).value);
+        const percentage = ((marks / totalMarks) * 100).toFixed(2);
+        const grade = getGrade(percentage);
+        const remarks = getRemarks(percentage);
+        const status = marks >= passingMarks ? 'Pass' : 'Fail';
+
+        // Alternate row colors
+        doc.setFillColor(index % 2 === 0 ? 240 : 255, 255, 255); // Light azure or white background
+
+        // Draw row background
+        doc.rect(margin, yPosition, tableWidth, rowHeight, 'F'); // Draw row background
+
+        // Draw cell borders
+        doc.setDrawColor(0); // Black color for borders
+        columnWidths.forEach((width, i) => {
+            doc.rect(margin + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), yPosition, width, rowHeight); // Cell border
+        });
+
+        // Add text to cells
+        doc.text(subject, margin + 2, yPosition + 5);
+        doc.text(marks.toString(), margin + 30, yPosition + 5);
+        doc.text(totalMarks.toString(), margin + 50, yPosition + 5);
+        doc.text(passingMarks.toString(), margin + 70, yPosition + 5);
+        doc.text(percentage, margin + 90, yPosition + 5);
+        doc.text(getGrade(percentage), margin + 110, yPosition + 5);
+        doc.text(getRemarks(percentage), margin + 130, yPosition + 5);
+        doc.text(status, margin + 160, yPosition + 5);
+
+        yPosition += rowHeight;
+    });
+
+    // Save PDF
+    doc.save(`${studentName}_MarkSheet.pdf`);
+}
+
+function getGrade(percentage) {
+    if (percentage >= 90) return 'A+';
+    if (percentage >= 80) return 'A';
+    if (percentage >= 70) return 'B+';
+    if (percentage >= 60) return 'B';
+    if (percentage >= 50) return 'C+';
+    if (percentage >= 40) return 'C';
+    return 'D';
+}
+
+function getRemarks(percentage) {
+    if (percentage >= 90) return 'Excellent';
+    if (percentage >= 80) return 'Very Good';
+    if (percentage >= 70) return 'Good';
+    if (percentage >= 60) return 'Satisfactory';
+    if (percentage >= 50) return 'Needs Improvement';
+    return 'Poor';
+}
+
+    </script>
 </body>
 </html>
