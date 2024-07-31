@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Info</title>
+    <link rel="stylesheet" href="user-info.css">
+</head>
+<body>
+    <form id="userInfoForm">
+        <label for="schoolName">School Name:</label>
+        <input type="text" id="schoolName" required>
+        
+        <label for="className">Class:</label>
+        <input type="text" id="className" required>
+        
+        <label for="totalMarks">Total Marks:</label>
+        <input type="number" id="totalMarks" required>
+        
+        <label for="passingMarks">Passing Marks:</label>
+        <input type="number" id="passingMarks" required>
+        
+        <label for="subjectCount">Number of Subjects:</label>
+        <input type="number" id="subjectCount" required>
+
+        <div id="subjectsContainer"></div>
+
+        <button type="button" onclick="saveUserInfo()">Save</button>
+    </form>
+
+    <script>
+        document.getElementById('subjectCount').addEventListener('change', function () {
+            const subjectsContainer = document.getElementById('subjectsContainer');
+            subjectsContainer.innerHTML = '';
+            const subjectCount = this.value;
+            for (let i = 0; i < subjectCount; i++) {
+                const label = document.createElement('label');
+                label.innerText = `Subject ${i + 1}:`;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'subject';
+                subjectsContainer.appendChild(label);
+                subjectsContainer.appendChild(input);
+            }
+        });
+
+        function validateUserInfo() {
+            const schoolName = document.getElementById('schoolName').value;
+            const className = document.getElementById('className').value;
+            const totalMarks = document.getElementById('totalMarks').value;
+            const passingMarks = document.getElementById('passingMarks').value;
+            const subjectCount = document.getElementById('subjectCount').value;
+
+            if (!schoolName || !className || !totalMarks || !passingMarks || subjectCount <= 0) {
+                alert('Please fill in all required fields.');
+                return false;
+            }
+            return true;
+        }
+
+        function saveUserInfo() {
+            if (!validateUserInfo()) return;
+            
+            const schoolName = document.getElementById('schoolName').value;
+            const className = document.getElementById('className').value;
+            const totalMarks = document.getElementById('totalMarks').value;
+            const passingMarks = document.getElementById('passingMarks').value;
+            const subjects = Array.from(document.getElementsByClassName('subject')).map(input => input.value);
+
+            localStorage.setItem('schoolName', schoolName);
+            localStorage.setItem('className', className);
+            localStorage.setItem('totalMarks', totalMarks);
+            localStorage.setItem('passingMarks', passingMarks);
+            localStorage.setItem('subjects', JSON.stringify(subjects));
+
+            alert('Information saved successfully!');
+            window.location.href = 'index.html';
+        }
+
+        function loadUserInfo() {
+            const schoolName = localStorage.getItem('schoolName');
+            const className = localStorage.getItem('className');
+            const totalMarks = localStorage.getItem('totalMarks');
+            const passingMarks = localStorage.getItem('passingMarks');
+            const subjects = JSON.parse(localStorage.getItem('subjects'));
+
+            document.getElementById('schoolName').value = schoolName;
+            document.getElementById('className').value = className;
+            document.getElementById('totalMarks').value = totalMarks;
+            document.getElementById('passingMarks').value = passingMarks;
+
+            const subjectsContainer = document.getElementById('subjectsContainer');
+            subjects.forEach((subject, index) => {
+                const label = document.createElement('label');
+                label.innerText = `Subject ${index + 1}:`;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'subject';
+                input.value = subject;
+                subjectsContainer.appendChild(label);
+                subjectsContainer.appendChild(input);
+            });
+        }
+
+        window.onload = function() {
+            if (localStorage.getItem('schoolName')) {
+                loadUserInfo();
+            }
+        };
+    </script>
+</body>
+</html>
