@@ -13,6 +13,7 @@ form {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 /* Form Labels and Inputs */
@@ -80,11 +81,36 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    margin-top: 20px;
-    display: block;
-    width: 100%;
+    margin: 5px; /* Add space around each button */
+    width: 150px; /* Set a fixed width */
+    height: 40px; /* Set a fixed height */
 }
 
 button:hover {
     background-color: #0056b3;
+}
+
+/* Button Group */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Add space between button rows */
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+}
+
+/* Button Rows */
+.button-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Student Counter */
+#studentCounter {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #333;
 }
