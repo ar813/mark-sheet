@@ -114,3 +114,30 @@ button:hover {
     font-size: 16px;
     color: #333;
 }
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    form {
+        padding: 10px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    button {
+        width: 100%; /* Full width on smaller screens */
+    }
+
+    .button-group {
+        flex-direction: row; /* Align buttons horizontally on smaller screens */
+        bottom: 0; /* Move button group to the bottom */
+        left: 0;
+        right: 0;
+    }
+
+    .button-row {
+        flex-direction: column; /* Stack buttons vertically on smaller screens */
+        gap: 10px; /* Reduce space between buttons */
+    }
+}
