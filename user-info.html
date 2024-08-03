@@ -26,6 +26,9 @@
         <div id="subjectsContainer"></div>
 
         <button type="button" onclick="saveUserInfo()">Save</button>
+        <button type="button" onclick="exportUserInfo()">Export</button>
+        <input type="file" id="importFile" accept=".json" onchange="importUserInfo(event)" style="display: none;">
+        <button type="button" onclick="document.getElementById('importFile').click()">Import</button>
     </form>
 
     <script>
@@ -90,6 +93,7 @@
             document.getElementById('passingMarks').value = passingMarks;
 
             const subjectsContainer = document.getElementById('subjectsContainer');
+            subjectsContainer.innerHTML = '';
             subjects.forEach((subject, index) => {
                 const label = document.createElement('label');
                 label.innerText = `Subject ${index + 1}:`;
@@ -100,6 +104,62 @@
                 subjectsContainer.appendChild(label);
                 subjectsContainer.appendChild(input);
             });
+        }
+
+        function exportUserInfo() {
+            const schoolName = document.getElementById('schoolName').value;
+            const className = document.getElementById('className').value;
+            const totalMarks = document.getElementById('totalMarks').value;
+            const passingMarks = document.getElementById('passingMarks').value;
+            const subjects = Array.from(document.getElementsByClassName('subject')).map(input => input.value);
+
+            const data = {
+                schoolName,
+                className,
+                totalMarks,
+                passingMarks,
+                subjects
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'userInfo.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function importUserInfo(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                document.getElementById('schoolName').value = data.schoolName;
+                document.getElementById('className').value = data.className;
+                document.getElementById('totalMarks').value = data.totalMarks;
+                document.getElementById('passingMarks').value = data.passingMarks;
+                document.getElementById('subjectCount').value = data.subjects.length;
+
+                const subjectsContainer = document.getElementById('subjectsContainer');
+                subjectsContainer.innerHTML = '';
+                data.subjects.forEach((subject, index) => {
+                    const label = document.createElement('label');
+                    label.innerText = `Subject ${index + 1}:`;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'subject';
+                    input.value = subject;
+                    subjectsContainer.appendChild(label);
+                    subjectsContainer.appendChild(input);
+                });
+            };
+            reader.readAsText(file);
         }
 
         window.onload = function() {

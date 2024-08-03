@@ -72,10 +72,24 @@ function nextStudent() {
     currentStudentIndex++;
     if (currentStudentIndex >= students.length) {
         students.push({}); // Add a new empty student object if necessary
+
+        // Clear inputs for the new student
+        document.getElementById('studentName').value = '';
+        document.getElementById('fatherName').value = '';
+        document.getElementById('rollNumber').value = '';
+
+        subjects.forEach(subject => {
+            const marksInput = document.querySelector(`.subjectMarks[data-subject="${subject}"]`);
+            if (marksInput) {
+                marksInput.value = ''; // Clear the input value
+            }
+        });
+    } else {
+        loadStudent(currentStudentIndex);
     }
-    loadStudent(currentStudentIndex);
     updateStudentCounter();
 }
+
 
 function previousStudent() {
     saveCurrentStudent();
@@ -136,17 +150,51 @@ function deleteStudent() {
 }
 
 function generatePDF() {
+    saveCurrentStudent(); // Save the current student data before generating PDF
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
+    const fitText = (text, maxWidth, fontSize) => {
+        let currentFontSize = fontSize;
+        doc.setFontSize(currentFontSize);
+        while (doc.getTextWidth(text) > maxWidth && currentFontSize > 1) {
+            currentFontSize -= 0.5;
+            doc.setFontSize(currentFontSize);
+        }
+        return currentFontSize;
+    };
+
+    // Calculate total marks for each student
+    students.forEach(student => {
+        student.totalMarksObtained = student.subjects.reduce((sum, subject) => {
+            return sum + (student.marks[subject] || 0);
+        }, 0);
+    });
+
+    // Determine positions based on total marks
+    const studentMarks = students.map(student => student.totalMarksObtained);
+    const sortedMarks = [...studentMarks].sort((a, b) => b - a);
+    students.forEach(student => {
+        student.position = sortedMarks.indexOf(student.totalMarksObtained) + 1;
+    });
 
     students.forEach((studentData, index) => {
         if (index > 0) doc.addPage();
 
         const margin = 10;
         const pageWidth = doc.internal.pageSize.width;
+        const pageHeight = doc.internal.pageSize.height;
         const rowHeight = 8;
         const headerHeight = 10;
         let yPosition = margin;
+
+        // Draw page border
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10);
+
+        yPosition += 5;
 
         // School Name
         doc.setFontSize(18);
@@ -170,6 +218,8 @@ function generatePDF() {
         doc.text(`Class: ${className}`, margin, yPosition);
         yPosition += 7;
         doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPosition);
+        yPosition += 7;
+        doc.text(`Position: ${studentData.position} ${studentData.position === 1 ? 'st' : studentData.position === 2 ? 'nd' : studentData.position === 3 ? 'rd' : 'th'}`, margin, yPosition);
         yPosition += 15;
 
         // Table Header
@@ -180,8 +230,8 @@ function generatePDF() {
         doc.rect(margin, yPosition, pageWidth - 2 * margin, headerHeight, 'F');
         doc.text('Subject', margin + 2, yPosition + 5);
         doc.text('Marks', margin + 30, yPosition + 5);
-        doc.text('Total', margin + 50, yPosition + 5);
-        doc.text('Passing', margin + 70, yPosition + 5);
+        doc.text('Max', margin + 50, yPosition + 5);
+        doc.text('Min', margin + 70, yPosition + 5);
         doc.text('Percent', margin + 90, yPosition + 5);
         doc.text('Grade', margin + 110, yPosition + 5);
         doc.text('Remarks', margin + 130, yPosition + 5);
@@ -193,7 +243,20 @@ function generatePDF() {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0);
         const tableWidth = pageWidth - 2 * margin;
-        const columnWidths = [28, 20, 20, 20, 20, 20, 30, 30];
+        const columnWidths = {
+            subject: 28,
+            marks: 20,
+            totalMarks: 20,
+            passingMarks: 20,
+            percent: 20,
+            grade: 20,
+            remarks: 30,
+            status: 20
+        };
+
+        let totalMarks = 0;
+        let totalObtainedMarks = 0;
+        let allSubjectsPassed = true;
 
         studentData.subjects.forEach((subject, idx) => {
             const marks = studentData.marks[subject] || 0;
@@ -201,42 +264,95 @@ function generatePDF() {
             const grade = getGrade(parseFloat(percentage));
             const remarks = getRemarks(parseFloat(percentage));
             const status = marks >= studentData.passingMarks ? 'Passed' : 'Failed';
+            
+            if (status === 'Failed') {
+                allSubjectsPassed = false;
+            }
+
+            const subjectFontSize = fitText(subject, columnWidths.subject, 10);
+            const marksFontSize = fitText(marks.toString(), columnWidths.marks, 10);
+            const totalMarksFontSize = fitText(studentData.totalMarks.toString(), columnWidths.totalMarks, 10);
+            const passingMarksFontSize = fitText(studentData.passingMarks.toString(), columnWidths.passingMarks, 10);
+            const percentFontSize = fitText(percentage, columnWidths.percent, 10);
+            const gradeFontSize = fitText(grade, columnWidths.grade, 10);
+            const remarksFontSize = fitText(remarks, columnWidths.remarks, 10);
+            const statusFontSize = fitText(status, columnWidths.status, 10);
+
+            if (yPosition + rowHeight > pageHeight - margin) {
+                doc.addPage();
+                yPosition = margin;
+                doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10); // Redraw border
+                yPosition += 15; // Adjust for the border and header
+            }
 
             doc.setFillColor(255, 255, 255);
             doc.rect(margin, yPosition, tableWidth, rowHeight, 'F');
 
+            doc.setFontSize(subjectFontSize);
             doc.text(subject, margin + 2, yPosition + 5);
+            doc.setFontSize(marksFontSize);
             doc.text(marks.toString(), margin + 30, yPosition + 5);
+            doc.setFontSize(totalMarksFontSize);
             doc.text(studentData.totalMarks.toString(), margin + 50, yPosition + 5);
+            doc.setFontSize(passingMarksFontSize);
             doc.text(studentData.passingMarks.toString(), margin + 70, yPosition + 5);
+            doc.setFontSize(percentFontSize);
             doc.text(percentage, margin + 90, yPosition + 5);
+            doc.setFontSize(gradeFontSize);
             doc.text(grade, margin + 110, yPosition + 5);
+            doc.setFontSize(remarksFontSize);
             doc.text(remarks, margin + 130, yPosition + 5);
+            doc.setFontSize(statusFontSize);
             doc.text(status, margin + 160, yPosition + 5);
+
+            totalMarks += studentData.totalMarks;
+            totalObtainedMarks += marks;
 
             yPosition += rowHeight;
         });
+
+        // Add a row for the student's total marks
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFillColor(200, 220, 255);
+        const totalRowY = yPosition + 5;
+        doc.rect(margin, totalRowY, tableWidth, rowHeight, 'F');
+        doc.text('Total', margin + 2, totalRowY + 5);
+        doc.text(totalObtainedMarks.toString(), margin + 30, totalRowY + 5);
+        doc.text(totalMarks.toString(), margin + 50, totalRowY + 5);
+        doc.text('-', margin + 70, totalRowY + 5); // Show '-' for Min. Marks
+        const totalPercentage = ((totalObtainedMarks / (studentData.subjects.length * studentData.totalMarks)) * 100).toFixed(2);
+        doc.text(totalPercentage, margin + 90, totalRowY + 5);
+        doc.text(getGrade(parseFloat(totalPercentage)), margin + 110, totalRowY + 5);
+        doc.text(getRemarks(parseFloat(totalPercentage)), margin + 130, totalRowY + 5);
+        doc.text(allSubjectsPassed ? 'Passed' : 'Failed', margin + 160, totalRowY + 5); // Show Passed/Failed based on all subjects status
+
+        yPosition += rowHeight;
     });
 
     doc.save('MarkSheets.pdf');
 }
 
+
+
+
 function getGrade(percentage) {
     if (percentage >= 90) return 'A+';
     if (percentage >= 80) return 'A';
-    if (percentage >= 70) return 'B+';
-    if (percentage >= 60) return 'B';
-    if (percentage >= 50) return 'C+';
-    if (percentage >= 40) return 'C';
-    return 'D';
+    if (percentage >= 70) return 'B';
+    if (percentage >= 60) return 'C';
+    if (percentage >= 50) return 'D';
+    if (percentage >= 40) return 'E';
+    return 'F';
 }
 
 function getRemarks(percentage) {
     if (percentage >= 90) return 'Excellent';
-    if (percentage >= 80) return 'Very Good';
-    if (percentage >= 70) return 'Good';
-    if (percentage >= 60) return 'Satisfactory';
-    if (percentage >= 50) return 'Needs Improvement';
+    if (percentage >= 80) return 'Fantastic';
+    if (percentage >= 70) return 'Very Good';
+    if (percentage >= 60) return 'Good';
+    if (percentage >= 50) return 'Nice';
+    if (percentage >= 40) return 'Satisfactory';
     return 'Poor';
 }
 
