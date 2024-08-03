@@ -194,7 +194,7 @@ function generatePDF() {
         doc.setLineWidth(0.5);
         doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10);
 
-        yPosition += 5;
+        yPosition += 10;
 
         // School Name
         doc.setFontSize(18);
@@ -332,9 +332,6 @@ function generatePDF() {
 
     doc.save('MarkSheets.pdf');
 }
-
-
-
 
 function getGrade(percentage) {
     if (percentage >= 90) return 'A+';
