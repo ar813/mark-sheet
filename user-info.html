@@ -8,6 +8,7 @@
 </head>
 <body>
     <form id="userInfoForm">
+        <!-- Existing form fields -->
         <label for="schoolName">School Name:</label>
         <input type="text" id="schoolName" required>
         
@@ -24,6 +25,13 @@
         <input type="number" id="subjectCount" required>
 
         <div id="subjectsContainer"></div>
+        
+        <!-- New fields for logos -->
+        <label for="logo1">First Logo:</label>
+        <input type="file" id="logo1" accept="image/*">
+        
+        <label for="logo2">Second Logo:</label>
+        <input type="file" id="logo2" accept="image/*">
 
         <button type="button" onclick="saveUserInfo()">Save</button>
         <button type="button" onclick="exportUserInfo()">Export</button>
@@ -32,6 +40,7 @@
     </form>
 
     <script>
+        // Existing JavaScript for handling form data
         document.getElementById('subjectCount').addEventListener('change', function () {
             const subjectsContainer = document.getElementById('subjectsContainer');
             subjectsContainer.innerHTML = '';
@@ -69,6 +78,31 @@
             const totalMarks = document.getElementById('totalMarks').value;
             const passingMarks = document.getElementById('passingMarks').value;
             const subjects = Array.from(document.getElementsByClassName('subject')).map(input => input.value);
+            
+            const logo1 = document.getElementById('logo1').files[0];
+            const logo2 = document.getElementById('logo2').files[0];
+
+            const reader1 = new FileReader();
+            reader1.onload = function(event) {
+                const logo1Data = event.target.result;
+                localStorage.setItem('logo1', logo1Data);
+            };
+            if (logo1) {
+                reader1.readAsDataURL(logo1);
+            } else {
+                localStorage.removeItem('logo1');
+            }
+
+            const reader2 = new FileReader();
+            reader2.onload = function(event) {
+                const logo2Data = event.target.result;
+                localStorage.setItem('logo2', logo2Data);
+            };
+            if (logo2) {
+                reader2.readAsDataURL(logo2);
+            } else {
+                localStorage.removeItem('logo2');
+            }
 
             localStorage.setItem('schoolName', schoolName);
             localStorage.setItem('className', className);
@@ -118,7 +152,9 @@
                 className,
                 totalMarks,
                 passingMarks,
-                subjects
+                subjects,
+                logo1: localStorage.getItem('logo1'),
+                logo2: localStorage.getItem('logo2')
             };
 
             const dataStr = JSON.stringify(data, null, 2);
@@ -158,6 +194,13 @@
                     subjectsContainer.appendChild(label);
                     subjectsContainer.appendChild(input);
                 });
+
+                if (data.logo1) {
+                    localStorage.setItem('logo1', data.logo1);
+                }
+                if (data.logo2) {
+                    localStorage.setItem('logo2', data.logo2);
+                }
             };
             reader.readAsText(file);
         }

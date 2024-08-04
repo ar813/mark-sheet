@@ -194,6 +194,22 @@ function generatePDF() {
         doc.setLineWidth(0.5);
         doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10);
 
+        // Add logos if available
+        const logo1 = localStorage.getItem('logo1');
+        const logo2 = localStorage.getItem('logo2');
+
+        if (logo1) {
+            const img1 = new Image();
+            img1.src = logo1;
+            doc.addImage(img1, 'JPEG', 10, yPosition, 30, 30); // Logo 1 at 40x40 px
+        }
+
+        if (logo2) {
+            const img2 = new Image();
+            img2.src = logo2;
+            doc.addImage(img2, 'JPEG', pageWidth - 40, yPosition, 30, 30); // Logo 2 at 40x40 px
+        }
+
         yPosition += 10;
 
         // School Name
@@ -203,7 +219,7 @@ function generatePDF() {
         const schoolNameWidth = doc.getTextWidth(schoolName);
         const schoolNameX = (pageWidth - schoolNameWidth) / 2;
         doc.text(schoolName, schoolNameX, yPosition);
-        yPosition += 15;
+        yPosition += logo1 || logo2 ? 35 : 15;
 
         // Student Info
         doc.setFontSize(12);
@@ -325,33 +341,35 @@ function generatePDF() {
         doc.text(totalPercentage, margin + 90, totalRowY + 5);
         doc.text(getGrade(parseFloat(totalPercentage)), margin + 110, totalRowY + 5);
         doc.text(getRemarks(parseFloat(totalPercentage)), margin + 130, totalRowY + 5);
-        doc.text(allSubjectsPassed ? 'Passed' : 'Failed', margin + 160, totalRowY + 5); // Show Passed/Failed based on all subjects status
+        doc.text(allSubjectsPassed ? 'Passed' : 'Failed', margin + 160, totalRowY + 5);
 
-        yPosition += rowHeight;
+        yPosition = totalRowY + rowHeight + 10;
     });
 
-    doc.save('MarkSheets.pdf');
+    doc.save('Student_Marks_Report.pdf');
 }
 
+
+// Function to get grade based on percentage
 function getGrade(percentage) {
     if (percentage >= 90) return 'A+';
     if (percentage >= 80) return 'A';
-    if (percentage >= 70) return 'B';
-    if (percentage >= 60) return 'C';
-    if (percentage >= 50) return 'D';
-    if (percentage >= 40) return 'E';
+    if (percentage >= 70) return 'B+';
+    if (percentage >= 60) return 'B';
+    if (percentage >= 50) return 'C';
     return 'F';
 }
 
+// Function to get remarks based on percentage
 function getRemarks(percentage) {
     if (percentage >= 90) return 'Excellent';
-    if (percentage >= 80) return 'Fantastic';
-    if (percentage >= 70) return 'Very Good';
-    if (percentage >= 60) return 'Good';
-    if (percentage >= 50) return 'Nice';
-    if (percentage >= 40) return 'Satisfactory';
-    return 'Poor';
+    if (percentage >= 80) return 'Very Good';
+    if (percentage >= 70) return 'Good';
+    if (percentage >= 60) return 'Satisfactory';
+    if (percentage >= 50) return 'Pass';
+    return 'Fail';
 }
+
 
 function exportStudents() {
     const blob = new Blob([JSON.stringify(students, null, 2)], { type: 'application/json' });
