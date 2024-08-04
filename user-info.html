@@ -21,18 +21,32 @@
         <label for="passingMarks">Passing Marks:</label>
         <input type="number" id="passingMarks" required>
         
+        <!-- New fields for school address, test, and section -->
+        <label for="schoolAddress">School Address:</label>
+        <input type="text" id="schoolAddress" required>
+        
+        <label for="test">Test:</label>
+        <input type="text" id="test" required>
+        
+        <label for="section">Section:</label>
+        <select id="section" required>
+            <option value="Boys">Boys</option>
+            <option value="Girls">Girls</option>
+            <option value="Other">Other</option>
+        </select>
+
         <label for="subjectCount">Number of Subjects:</label>
         <input type="number" id="subjectCount" required>
 
         <div id="subjectsContainer"></div>
-        
+
         <!-- New fields for logos -->
         <label for="logo1">First Logo:</label>
         <input type="file" id="logo1" accept="image/*">
         
         <label for="logo2">Second Logo:</label>
         <input type="file" id="logo2" accept="image/*">
-
+        
         <button type="button" onclick="saveUserInfo()">Save</button>
         <button type="button" onclick="exportUserInfo()">Export</button>
         <input type="file" id="importFile" accept=".json" onchange="importUserInfo(event)" style="display: none;">
@@ -62,8 +76,11 @@
             const totalMarks = document.getElementById('totalMarks').value;
             const passingMarks = document.getElementById('passingMarks').value;
             const subjectCount = document.getElementById('subjectCount').value;
+            const schoolAddress = document.getElementById('schoolAddress').value;
+            const test = document.getElementById('test').value;
+            const section = document.getElementById('section').value;
 
-            if (!schoolName || !className || !totalMarks || !passingMarks || subjectCount <= 0) {
+            if (!schoolName || !className || !totalMarks || !passingMarks || subjectCount <= 0 || !schoolAddress || !test || !section) {
                 alert('Please fill in all required fields.');
                 return false;
             }
@@ -78,7 +95,11 @@
             const totalMarks = document.getElementById('totalMarks').value;
             const passingMarks = document.getElementById('passingMarks').value;
             const subjects = Array.from(document.getElementsByClassName('subject')).map(input => input.value);
-            
+            const schoolAddress = document.getElementById('schoolAddress').value;
+            const test = document.getElementById('test').value;
+            const section = document.getElementById('section').value;
+            const subjectCount = document.getElementById('subjectCount').value;
+
             const logo1 = document.getElementById('logo1').files[0];
             const logo2 = document.getElementById('logo2').files[0];
 
@@ -109,6 +130,10 @@
             localStorage.setItem('totalMarks', totalMarks);
             localStorage.setItem('passingMarks', passingMarks);
             localStorage.setItem('subjects', JSON.stringify(subjects));
+            localStorage.setItem('schoolAddress', schoolAddress);
+            localStorage.setItem('test', test);
+            localStorage.setItem('section', section);
+            localStorage.setItem('subjectCount', subjectCount);
 
             alert('Information saved successfully!');
             window.location.href = 'index.html';
@@ -120,11 +145,19 @@
             const totalMarks = localStorage.getItem('totalMarks');
             const passingMarks = localStorage.getItem('passingMarks');
             const subjects = JSON.parse(localStorage.getItem('subjects'));
+            const schoolAddress = localStorage.getItem('schoolAddress');
+            const test = localStorage.getItem('test');
+            const section = localStorage.getItem('section');
+            const subjectCount = localStorage.getItem('subjectCount');
 
             document.getElementById('schoolName').value = schoolName;
             document.getElementById('className').value = className;
             document.getElementById('totalMarks').value = totalMarks;
             document.getElementById('passingMarks').value = passingMarks;
+            document.getElementById('schoolAddress').value = schoolAddress;
+            document.getElementById('test').value = test;
+            document.getElementById('section').value = section;
+            document.getElementById('subjectCount').value = subjectCount;
 
             const subjectsContainer = document.getElementById('subjectsContainer');
             subjectsContainer.innerHTML = '';
@@ -146,6 +179,10 @@
             const totalMarks = document.getElementById('totalMarks').value;
             const passingMarks = document.getElementById('passingMarks').value;
             const subjects = Array.from(document.getElementsByClassName('subject')).map(input => input.value);
+            const schoolAddress = document.getElementById('schoolAddress').value;
+            const test = document.getElementById('test').value;
+            const section = document.getElementById('section').value;
+            const subjectCount = document.getElementById('subjectCount').value;
 
             const data = {
                 schoolName,
@@ -153,8 +190,10 @@
                 totalMarks,
                 passingMarks,
                 subjects,
-                logo1: localStorage.getItem('logo1'),
-                logo2: localStorage.getItem('logo2')
+                schoolAddress,
+                test,
+                section,
+                subjectCount
             };
 
             const dataStr = JSON.stringify(data, null, 2);
@@ -180,7 +219,10 @@
                 document.getElementById('className').value = data.className;
                 document.getElementById('totalMarks').value = data.totalMarks;
                 document.getElementById('passingMarks').value = data.passingMarks;
-                document.getElementById('subjectCount').value = data.subjects.length;
+                document.getElementById('schoolAddress').value = data.schoolAddress;
+                document.getElementById('test').value = data.test;
+                document.getElementById('section').value = data.section;
+                document.getElementById('subjectCount').value = data.subjectCount;
 
                 const subjectsContainer = document.getElementById('subjectsContainer');
                 subjectsContainer.innerHTML = '';
@@ -194,22 +236,11 @@
                     subjectsContainer.appendChild(label);
                     subjectsContainer.appendChild(input);
                 });
-
-                if (data.logo1) {
-                    localStorage.setItem('logo1', data.logo1);
-                }
-                if (data.logo2) {
-                    localStorage.setItem('logo2', data.logo2);
-                }
             };
             reader.readAsText(file);
         }
 
-        window.onload = function() {
-            if (localStorage.getItem('schoolName')) {
-                loadUserInfo();
-            }
-        };
+        window.onload = loadUserInfo;
     </script>
 </body>
 </html>

@@ -4,7 +4,7 @@ const subjects = JSON.parse(localStorage.getItem('subjects')) || [];
 const totalMarks = parseFloat(localStorage.getItem('totalMarks')) || 0;
 const passingMarks = parseFloat(localStorage.getItem('passingMarks')) || 0;
 
-window.onload = function() {
+window.onload = function () {
     clearAllData(); // Clear data on page load
     if (students.length === 0) {
         students.push({}); // Initialize with one empty student object
@@ -213,13 +213,43 @@ function generatePDF() {
         yPosition += 10;
 
         // School Name
-        doc.setFontSize(18);
+        doc.setFontSize(19);
         doc.setFont('Algerian', 'bold');
         const schoolName = localStorage.getItem('schoolName');
         const schoolNameWidth = doc.getTextWidth(schoolName);
         const schoolNameX = (pageWidth - schoolNameWidth) / 2;
         doc.text(schoolName, schoolNameX, yPosition);
-        yPosition += logo1 || logo2 ? 35 : 15;
+
+        yPosition += 7;
+
+        // School Address, Test, and Section
+        const schoolAddress = localStorage.getItem('schoolAddress');
+        const test = localStorage.getItem('test');
+        const section = localStorage.getItem('section');
+
+        doc.setFontSize(14);
+        doc.setFont('Algerian', 'itali');
+
+        // Center align School Address
+        const schoolAddressWidth = doc.getTextWidth(`School Address: ${schoolAddress}`);
+        const schoolAddressX = (pageWidth - schoolAddressWidth) / 2;
+        doc.text(`School Address: ${schoolAddress}`, schoolAddressX, yPosition);
+
+        yPosition += 7;
+
+        // Center align Test
+        const testWidth = doc.getTextWidth(`Test: ${test}`);
+        const testX = (pageWidth - testWidth) / 2;
+        doc.text(`Test: ${test}`, testX, yPosition);
+
+        yPosition += 7;
+
+        // Center align Section
+        const sectionWidth = doc.getTextWidth(`Section: ${section}`);
+        const sectionX = (pageWidth - sectionWidth) / 2;
+        doc.text(`Section: ${section}`, sectionX, yPosition);
+
+        yPosition += 15;
 
         // Student Info
         doc.setFontSize(12);
@@ -280,7 +310,7 @@ function generatePDF() {
             const grade = getGrade(parseFloat(percentage));
             const remarks = getRemarks(parseFloat(percentage));
             const status = marks >= studentData.passingMarks ? 'Passed' : 'Failed';
-            
+
             if (status === 'Failed') {
                 allSubjectsPassed = false;
             }
@@ -387,7 +417,7 @@ function importStudents() {
 
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
                 const importedData = JSON.parse(e.target.result);
                 students = importedData;
