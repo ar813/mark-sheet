@@ -374,6 +374,115 @@ function generatePDF() {
         doc.text(allSubjectsPassed ? 'Passed' : 'Failed', margin + 160, totalRowY + 5);
 
         yPosition = totalRowY + rowHeight + 10;
+
+        ///////////////////////////////
+        // Add Summary Table
+        if (yPosition + rowHeight * 7 > pageHeight - margin) {
+            doc.addPage();
+            yPosition = margin;
+            doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10); // Redraw border
+            yPosition += 15; // Adjust for the border and header
+        }
+
+        // Adjusted dimensions for the summary table
+        const summaryTableWidth = pageWidth - 100 - 50; // Table width
+        const summaryTableHeight = rowHeight * 7; // Table height
+        const columnWidth = summaryTableWidth / 2;
+        const tableXPosition = pageWidth - summaryTableWidth - 20; // Position table on the right side
+
+        // Set font and colors
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setFillColor(255, 255, 255); // No background color for the table
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, summaryTableHeight, 'F'); // Draw the table background
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0);
+        doc.setFillColor(255, 255, 255); // No fill color
+
+        // Set consistent border width
+        const borderWidth = 0.5; // Border width
+        doc.setLineWidth(borderWidth);
+
+        // Draw table borders with consistent width
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, summaryTableHeight); // Outer border
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, rowHeight); // Header border
+        doc.rect(tableXPosition, yPosition + rowHeight, columnWidth, summaryTableHeight - rowHeight); // Left column border
+        doc.rect(tableXPosition + columnWidth, yPosition + rowHeight, columnWidth, summaryTableHeight - rowHeight); // Right column border
+
+        // Table Header
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setFillColor(200, 220, 255); // Blue background for header
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, rowHeight, 'F'); // Header background
+        doc.setTextColor(0);
+        doc.text('Summary', tableXPosition + summaryTableWidth / 2, yPosition + rowHeight / 2 + 3, { align: 'center' });
+
+        // Summary Data Rows
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0);
+
+        // Define row positions
+        const rowYPositions = [
+            yPosition + rowHeight,
+            yPosition + 2 * rowHeight,
+            yPosition + 3 * rowHeight,
+            yPosition + 4 * rowHeight,
+            yPosition + 5 * rowHeight,
+            yPosition + 6 * rowHeight,
+            yPosition + 7 * rowHeight
+        ];
+
+        // Add summary data in columns
+        const textMargin = 5; // Margin for text padding
+        doc.text('Grand Total:', tableXPosition + textMargin, rowYPositions[0] + 5);
+        doc.text(`${totalObtainedMarks}/${totalMarks}`, tableXPosition + columnWidth + textMargin, rowYPositions[0] + 5);
+
+        doc.text('Position:', tableXPosition + textMargin, rowYPositions[1] + 5);
+        doc.text(`${studentData.position}`, tableXPosition + columnWidth + textMargin, rowYPositions[1] + 5);
+
+        doc.text('Percentage:', tableXPosition + textMargin, rowYPositions[2] + 5);
+        doc.text(`${((totalObtainedMarks / totalMarks) * 100).toFixed(2)}%`, tableXPosition + columnWidth + textMargin, rowYPositions[2] + 5);
+
+        doc.text('Grade:', tableXPosition + textMargin, rowYPositions[3] + 5);
+        doc.text(`${getGrade(((totalObtainedMarks / totalMarks) * 100).toFixed(2))}`, tableXPosition + columnWidth + textMargin, rowYPositions[3] + 5);
+
+        doc.text('Remarks:', tableXPosition + textMargin, rowYPositions[4] + 5);
+        doc.text(`${getRemarks(((totalObtainedMarks / totalMarks) * 100).toFixed(2))}`, tableXPosition + columnWidth + textMargin, rowYPositions[4] + 5);
+
+        doc.text('Status:', tableXPosition + textMargin, rowYPositions[5] + 5);
+        doc.text(`${allSubjectsPassed ? 'Passed' : 'Failed'}`, tableXPosition + columnWidth + textMargin, rowYPositions[5] + 5);
+
+
+
+        //////////////////////////////////////
+
+        // Signature
+
+        const footerYPosition = pageHeight - 10; // Adjust this value as needed
+        const lineYPosition = footerYPosition - 4; // Position the line slightly above the text
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        // Class Teacher's Signature
+        doc.text('Class Teacher\'s Signature', margin, footerYPosition);
+        doc.line(margin, lineYPosition, margin + doc.getTextWidth('Class Teacher\'s Signature'), lineYPosition);
+
+        // Principal's Signature
+        const principalSignatureX = pageWidth / 2 - 20;
+        doc.text('Principal\'s Signature', principalSignatureX, footerYPosition);
+        doc.line(principalSignatureX, lineYPosition, principalSignatureX + doc.getTextWidth('Principal\'s Signature'), lineYPosition);
+
+        // Parent's Signature
+        const parentSignatureX = pageWidth - margin - 30;
+        doc.text('Parent\'s Signature', parentSignatureX, footerYPosition);
+        doc.line(parentSignatureX, lineYPosition, parentSignatureX + doc.getTextWidth('Parent\'s Signature'), lineYPosition);
+
+
+
     });
 
     doc.save('Student_Marks_Report.pdf');
