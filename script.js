@@ -179,6 +179,7 @@ function generatePDF() {
         student.position = sortedMarks.indexOf(student.totalMarksObtained) + 1;
     });
 
+
     students.forEach((studentData, index) => {
         if (index > 0) doc.addPage();
 
@@ -263,10 +264,10 @@ function generatePDF() {
         const className = localStorage.getItem('className');
         doc.text(`Class: ${className}`, margin, yPosition);
         yPosition += 7;
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPosition);
-        yPosition += 7;
-        doc.text(`Position: ${studentData.position} ${studentData.position === 1 ? 'st' : studentData.position === 2 ? 'nd' : studentData.position === 3 ? 'rd' : 'th'}`, margin, yPosition);
-        yPosition += 15;
+        doc.text(`Issue Date: ${new Date().toLocaleDateString()}`, margin, yPosition);
+        yPosition += 10;
+        // doc.text(`Position: ${studentData.position} ${studentData.position === 1 ? 'st' : studentData.position === 2 ? 'nd' : studentData.position === 3 ? 'rd' : 'th'}`, margin, yPosition);
+        // yPosition += 15;
 
         // Table Header
         doc.setFontSize(10);
@@ -306,7 +307,7 @@ function generatePDF() {
 
         studentData.subjects.forEach((subject, idx) => {
             const marks = studentData.marks[subject] || 0;
-            const percentage = ((marks / studentData.totalMarks) * 100).toFixed(2);
+            const percentage = `${((marks / studentData.totalMarks) * 100).toFixed(2)}%`;
             const grade = getGrade(parseFloat(percentage));
             const remarks = getRemarks(parseFloat(percentage));
             const status = marks >= studentData.passingMarks ? 'Passed' : 'Failed';
@@ -354,7 +355,7 @@ function generatePDF() {
             totalMarks += studentData.totalMarks;
             totalObtainedMarks += marks;
 
-            yPosition += rowHeight;
+            yPosition += 7;
         });
 
         // Add a row for the student's total marks
@@ -377,7 +378,7 @@ function generatePDF() {
 
         ///////////////////////////////
         // Add Summary Table
-        if (yPosition + rowHeight * 7 > pageHeight - margin) {
+        if (yPosition + rowHeight * 3 > pageHeight - margin) {
             doc.addPage();
             yPosition = margin;
             doc.rect(margin - 5, margin - 5, pageWidth - 2 * margin + 10, pageHeight - 2 * margin + 10); // Redraw border
@@ -402,22 +403,23 @@ function generatePDF() {
         doc.setFillColor(255, 255, 255); // No fill color
 
         // Set consistent border width
-        const borderWidth = 0.5; // Border width
+        const borderWidth = 0.4; // Border width
         doc.setLineWidth(borderWidth);
-
-        // Draw table borders with consistent width
-        doc.rect(tableXPosition, yPosition, summaryTableWidth, summaryTableHeight); // Outer border
-        doc.rect(tableXPosition, yPosition, summaryTableWidth, rowHeight); // Header border
-        doc.rect(tableXPosition, yPosition + rowHeight, columnWidth, summaryTableHeight - rowHeight); // Left column border
-        doc.rect(tableXPosition + columnWidth, yPosition + rowHeight, columnWidth, summaryTableHeight - rowHeight); // Right column border
 
         // Table Header
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setFillColor(200, 220, 255); // Blue background for header
-        doc.rect(tableXPosition, yPosition, summaryTableWidth, rowHeight, 'F'); // Header background
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, 8, 'F'); // Header background
+
+        // Draw table borders with consistent width
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, 39); // Outer border
+        doc.rect(tableXPosition, yPosition, summaryTableWidth, rowHeight); // Header border
+        doc.rect(tableXPosition, yPosition + rowHeight, columnWidth, summaryTableHeight - 25); // Left column border
+        doc.rect(tableXPosition + columnWidth, yPosition + rowHeight, columnWidth, summaryTableHeight - 25); // Right column border
+
         doc.setTextColor(0);
-        doc.text('Summary', tableXPosition + summaryTableWidth / 2, yPosition + rowHeight / 2 + 3, { align: 'center' });
+        doc.text('Summary', tableXPosition + summaryTableWidth / 2, yPosition + 4 / 2 + 3, { align: 'center' });
 
         // Summary Data Rows
         doc.setFontSize(10);
@@ -427,39 +429,53 @@ function generatePDF() {
         // Define row positions
         const rowYPositions = [
             yPosition + rowHeight,
-            yPosition + 2 * rowHeight,
-            yPosition + 3 * rowHeight,
-            yPosition + 4 * rowHeight,
-            yPosition + 5 * rowHeight,
-            yPosition + 6 * rowHeight,
-            yPosition + 7 * rowHeight
+            yPosition + 1.7 * rowHeight,
+            yPosition + 2.4 * rowHeight,
+            yPosition + 3.1 * rowHeight,
+            yPosition + 3.8 * rowHeight,
+            // yPosition + 5 * rowHeight,
+            // yPosition + 6 * rowHeight
         ];
+
+        // Add Position
+        let positionText = `${studentData.position}`;
+        if (studentData.position === 1) positionText += 'st';
+        else if (studentData.position === 2) positionText += 'nd';
+        else if (studentData.position === 3) positionText += 'rd';
+        else positionText += 'th';
+
+        // Check if student has failed
+        if (!allSubjectsPassed) {
+            positionText = 'Failed';
+        }
 
         // Add summary data in columns
         const textMargin = 5; // Margin for text padding
-        doc.text('Grand Total:', tableXPosition + textMargin, rowYPositions[0] + 5);
+        doc.text('Grand Total', tableXPosition + textMargin, rowYPositions[0] + 5);
         doc.text(`${totalObtainedMarks}/${totalMarks}`, tableXPosition + columnWidth + textMargin, rowYPositions[0] + 5);
 
-        doc.text('Position:', tableXPosition + textMargin, rowYPositions[1] + 5);
-        doc.text(`${studentData.position}`, tableXPosition + columnWidth + textMargin, rowYPositions[1] + 5);
+        doc.text('Position', tableXPosition + textMargin, rowYPositions[1] + 5);
+        doc.text(`${positionText}`, tableXPosition + columnWidth + textMargin, rowYPositions[1] + 5);
 
-        doc.text('Percentage:', tableXPosition + textMargin, rowYPositions[2] + 5);
+        doc.text('Percentage', tableXPosition + textMargin, rowYPositions[2] + 5);
         doc.text(`${((totalObtainedMarks / totalMarks) * 100).toFixed(2)}%`, tableXPosition + columnWidth + textMargin, rowYPositions[2] + 5);
 
-        doc.text('Grade:', tableXPosition + textMargin, rowYPositions[3] + 5);
+        doc.text('Grade', tableXPosition + textMargin, rowYPositions[3] + 5);
         doc.text(`${getGrade(((totalObtainedMarks / totalMarks) * 100).toFixed(2))}`, tableXPosition + columnWidth + textMargin, rowYPositions[3] + 5);
 
-        doc.text('Remarks:', tableXPosition + textMargin, rowYPositions[4] + 5);
+        doc.text('Remarks', tableXPosition + textMargin, rowYPositions[4] + 5);
         doc.text(`${getRemarks(((totalObtainedMarks / totalMarks) * 100).toFixed(2))}`, tableXPosition + columnWidth + textMargin, rowYPositions[4] + 5);
 
-        doc.text('Status:', tableXPosition + textMargin, rowYPositions[5] + 5);
-        doc.text(`${allSubjectsPassed ? 'Passed' : 'Failed'}`, tableXPosition + columnWidth + textMargin, rowYPositions[5] + 5);
+        // doc.text('Status', tableXPosition + textMargin, rowYPositions[5] + 5);
+        // doc.text(`${allSubjectsPassed ? 'Passed' : 'Failed'}`, tableXPosition + columnWidth + textMargin, rowYPositions[5] + 5);
 
 
 
         //////////////////////////////////////
 
         // Signature
+        const borderWidths = 0.5; // Border width
+        doc.setLineWidth(borderWidths);
 
         const footerYPosition = pageHeight - 10; // Adjust this value as needed
         const lineYPosition = footerYPosition - 4; // Position the line slightly above the text
@@ -493,9 +509,10 @@ function generatePDF() {
 function getGrade(percentage) {
     if (percentage >= 90) return 'A+';
     if (percentage >= 80) return 'A';
-    if (percentage >= 70) return 'B+';
-    if (percentage >= 60) return 'B';
-    if (percentage >= 50) return 'C';
+    if (percentage >= 70) return 'B';
+    if (percentage >= 60) return 'C';
+    if (percentage >= 50) return 'D';
+    if (percentage >= 40) return 'E';
     return 'F';
 }
 
@@ -504,8 +521,9 @@ function getRemarks(percentage) {
     if (percentage >= 90) return 'Excellent';
     if (percentage >= 80) return 'Very Good';
     if (percentage >= 70) return 'Good';
-    if (percentage >= 60) return 'Satisfactory';
-    if (percentage >= 50) return 'Pass';
+    if (percentage >= 60) return 'Nice';
+    if (percentage >= 50) return 'Satisfactory';
+    if (percentage >= 40) return 'Poor';
     return 'Fail';
 }
 
